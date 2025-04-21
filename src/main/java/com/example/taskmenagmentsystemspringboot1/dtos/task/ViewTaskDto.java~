@@ -1,0 +1,28 @@
+package com.example.taskmenagmentsystemspringboot1.dtos.task;
+
+import com.example.taskmenagmentsystemspringboot1.entities.task.TaskPriority;
+import com.example.taskmenagmentsystemspringboot1.entities.task.TaskStatus;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ViewTaskDto {
+    
+    private Long id;
+    private String title;
+    private String description;
+    private TaskStatus status;
+    private TaskPriority priority;
+    private LocalDate deadline;
+    private LocalDate createdAt;
+    private String assignedTo;
+    private String createdBy;
+
+}
