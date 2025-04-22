@@ -12,6 +12,7 @@ public interface UserService {
     UserProfileDto login(LoginUserDto loginUserDto);
     User register(CreateUserDto createUserDto);
     UserViewDto getUser(Long id);
+    void deleteUser(Long id);
 
 
 }
