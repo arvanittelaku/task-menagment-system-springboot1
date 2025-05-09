@@ -5,18 +5,19 @@ import com.example.taskmenagmentsystemspringboot1.dtos.user.LoginUserDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.user.UserProfileDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
+import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public interface UserService {
-    UserProfileDto login(LoginUserDto loginUserDto);
-    User registerMenager(CreateUserDto createUserDto);
+
     void deleteUser(Long id);
 
+    void registerManager(CreateUserDto createUserDto);
 
     UserViewDto getUserById(Long id);
-    List<User> getAllUsersMenagers();
+    List<User> getAllUsersByRole(UserRole role);
 
 }

@@ -68,4 +68,9 @@ public class TaskServiceImpl implements TaskService {
         task.setAssignedTo(user);
         return taskRepository.save(task);
     }
+
+    @Override
+    public List<Task> getTasksByUserId(Long id) {
+        return taskRepository.findAllByAssignedTo_Id(id);
+    }
 }
