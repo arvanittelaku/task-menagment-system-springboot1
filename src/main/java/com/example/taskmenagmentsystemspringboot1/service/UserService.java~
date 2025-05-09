@@ -7,16 +7,12 @@ import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public interface UserService {
     UserProfileDto login(LoginUserDto loginUserDto);
     User registerMenager(CreateUserDto createUserDto);
+    UserViewDto getUser(Long id);
     void deleteUser(Long id);
 
-
-    UserViewDto getUserById(Long id);
-    List<User> getAllUsersMenagers();
 
 }

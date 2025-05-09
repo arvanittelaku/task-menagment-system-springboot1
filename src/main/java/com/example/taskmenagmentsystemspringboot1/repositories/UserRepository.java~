@@ -1,16 +1,11 @@
 package com.example.taskmenagmentsystemspringboot1.repositories;
 
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
-import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
 
 public interface UserRepository extends JpaRepository<User,Long> {
 
     Object findByUsername(String username);
 
     void removeById(Long id);
-
-    List<User> streamUsersByRole(UserRole role);
 }

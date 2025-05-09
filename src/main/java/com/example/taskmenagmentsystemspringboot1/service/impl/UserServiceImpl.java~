@@ -15,14 +15,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
+    private  UserMapper userMapper;
     @Override
     public UserProfileDto login(LoginUserDto loginUserDto) {
         return null;
     }
 
     @Override
-    public User register(CreateUserDto createUserDto) {
+    public User registerMenager(CreateUserDto createUserDto) {
         var exists = userRepository.findByUsername(createUserDto.getUsername());
         if (exists !=  null) {
             throw new UsernameExistsException("Username already exists");
