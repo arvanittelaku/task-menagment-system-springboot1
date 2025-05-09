@@ -8,12 +8,14 @@ import com.example.taskmenagmentsystemspringboot1.mappers.TaskMapper;
 import com.example.taskmenagmentsystemspringboot1.repositories.TaskRepository;
 import com.example.taskmenagmentsystemspringboot1.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
+
 @RequiredArgsConstructor
 @Service
 public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
-    private final TaskMapper taskMapper;
+    private TaskMapper taskMapper;
     @Override
     public Task createTask(CreateTaskDto createTaskDto) {
         return taskMapper.fromCreateToEntity(createTaskDto);
