@@ -90,7 +90,6 @@ public class TaskServiceImpl implements TaskService {
         return taskRepository.findAllByAssignedTo_Id(id);
     }
 
-    @Override
     public Task updateTaskStatus(Long taskId, TaskStatus newStatus) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));

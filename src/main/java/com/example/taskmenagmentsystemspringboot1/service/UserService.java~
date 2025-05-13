@@ -19,6 +19,5 @@ public interface UserService {
 
     UserViewDto getUserById(Long id);
     List<User> getAllUsersByRole(UserRole role);
-    User findUserByUsername(String username);
 
 }

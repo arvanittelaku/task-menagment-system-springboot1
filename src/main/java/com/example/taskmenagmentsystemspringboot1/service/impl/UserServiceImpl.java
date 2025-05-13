@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -61,7 +62,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getAllUsersByRole(UserRole role) {
-        return userRepository.streamUsersByRole(role);
+        return userRepository.findByRole(role);
+    }
+
+    @Override
+    public User findUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
 
     @Override
@@ -78,24 +84,24 @@ public class UserServiceImpl implements UserService {
 
     public UserProfileDto login(LoginUserDto loginUserDto) {
         // Find the user by username
-        User user = (User) userRepository.findByUsername(loginUserDto.getUsername());
+        Optional<User> user =  userRepository.findByUsername(loginUserDto.getUsername());
 
         // Check if the user exists and if the password matches
-        if (user == null || !passwordEncoder.matches(loginUserDto.getPassword(), user.getPassword())) {
+        if (user == null || !passwordEncoder.matches(loginUserDto.getPassword(), user.get().getPassword())) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
         // Generate JWT token
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.get().getUsername());
 
         // Populate UserProfileDto
         UserProfileDto userProfileDto = new UserProfileDto();
-        userProfileDto.setUsername(user.getUsername());
-        userProfileDto.setEmail(user.getEmail());
-        userProfileDto.setRole(user.getRole());
+        userProfileDto.setUsername(user.get().getUsername());
+        userProfileDto.setEmail(user.get().getEmail());
+        userProfileDto.setRole(user.get().getRole());
 
         // Map tasks to ViewTaskDto
-        List<ViewTaskDto> taskDtos = taskMapper.fromTaskToView(taskService.getTasksForCurrentUser(user));
+        List<ViewTaskDto> taskDtos = taskMapper.fromTaskToView(taskService.getTasksForCurrentUser(user.get()));
         userProfileDto.setTasks(taskDtos);
 
         // Set the token

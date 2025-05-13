@@ -1,7 +1,13 @@
 package com.example.taskmenagmentsystemspringboot1.security;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class AuthenticationRequest {
+
+    @NotBlank(message = "Username is required")
     private String username;
+
+    @NotBlank(message = "Password is required")
     private String password;
 
     public AuthenticationRequest() {

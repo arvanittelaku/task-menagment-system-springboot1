@@ -19,8 +19,7 @@ public class MyUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Fetch user from the database by username
-        com.example.taskmenagmentsystemspringboot1.entities.user.User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        
 
         return new User(user.getUsername(), user.getPassword(), new ArrayList<>());
     }

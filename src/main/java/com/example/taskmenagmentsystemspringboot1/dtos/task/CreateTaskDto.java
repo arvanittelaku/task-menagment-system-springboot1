@@ -1,6 +1,7 @@
 package com.example.taskmenagmentsystemspringboot1.dtos.task;
 
 import com.example.taskmenagmentsystemspringboot1.entities.task.TaskPriority;
+import com.example.taskmenagmentsystemspringboot1.entities.user.User;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -30,5 +31,5 @@ public class CreateTaskDto {
     private LocalDate deadline;
     private TaskPriority priority;
     private Long assignedToId;
-    private Long createdBy;
+    private User createdBy;
 }

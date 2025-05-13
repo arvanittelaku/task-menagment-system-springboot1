@@ -10,9 +10,13 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface TaskMapper {
-    Task fromCreateToEntity(CreateTaskDto createTaskDto);
-    ViewTaskDto fromEntityToView(Task task);
-    Task fromUpdateToEntity(UpdateTaskDto updateTaskDto);
-
+//    Task fromCreateToEntity(CreateTaskDto createTaskDto);
+//    ViewTaskDto fromEntityToView(Task task);
+//    Task fromUpdateToEntity(UpdateTaskDto updateTaskDto);
     List<ViewTaskDto> fromTaskToView(List<Task> tasks);
+
+    Task fromCreateToEntity(CreateTaskDto createTaskDto);
+    Task fromUpdateToEntity(UpdateTaskDto updateTaskDto);
+    ViewTaskDto fromEntityToView(Task task);
+
 }
