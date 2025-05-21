@@ -31,4 +31,5 @@ public class UserProfileDto {
 
     private List<ViewTaskDto> tasks;
 
+    private String token;
 }

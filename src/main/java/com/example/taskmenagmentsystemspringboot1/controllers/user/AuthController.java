@@ -1,0 +1,39 @@
+package com.example.taskmenagmentsystemspringboot1.controllers.user;
+
+import com.example.taskmenagmentsystemspringboot1.dtos.user.LoginUserDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserProfileDto;
+import com.example.taskmenagmentsystemspringboot1.service.AuthenticationService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+public class AuthController {
+    private final AuthenticationService service;
+
+
+    @PostMapping("/login")
+    @CrossOrigin(origins = "*")
+    @PreAuthorize("permitAll()")
+    public ResponseEntity<UserProfileDto> login(@RequestBody LoginUserDto request) {
+        // hapi 1: Authenticate user
+        var user = service.authenticate(request.getUsername(), request.getPassword());
+
+        // hapi 2: Generate token
+        var token = service.generateToken(user);
+
+        // Create UserProfileDto with user details
+        var userProfileDto = new UserProfileDto();
+        userProfileDto.setUsername(user.getUsername());
+        userProfileDto.setToken(token);
+        
+        return ResponseEntity.ok(userProfileDto);
+    }
+}

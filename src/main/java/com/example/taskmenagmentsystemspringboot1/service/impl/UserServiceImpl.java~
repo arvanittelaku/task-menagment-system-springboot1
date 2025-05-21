@@ -62,10 +62,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserProfileDto findUserByUsername(String username) {
+    public UserViewDto findUserByUsername(String username) {
         var user = userRepository.findByUsername(username);
         if (user.isPresent()) {
-            return userMapper.fromUserToProfile(user.get());
+            return userMapper.fromUserToView(user.get());
         }
         return null;
     }
@@ -110,7 +110,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-
+    
 
 
 

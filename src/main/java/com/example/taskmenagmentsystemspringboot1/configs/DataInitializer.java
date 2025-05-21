@@ -1,0 +1,56 @@
+package com.example.taskmenagmentsystemspringboot1.configs;
+
+import com.example.taskmenagmentsystemspringboot1.entities.user.User;
+import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
+import com.example.taskmenagmentsystemspringboot1.repositories.UserRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+@Component
+public class DataInitializer implements CommandLineRunner {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder; // Injected properly as a Spring Bean
+
+    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        // Create and save test users if they don't exist
+        if (!userRepository.existsByUsername("user")) {
+            User user = User.builder()
+                    .username("user")
+                    .password(passwordEncoder.encode("password"))
+                    .email("user@example.com")
+                    .role(UserRole.USER)
+                    .build();
+            userRepository.save(user);
+        }
+
+        if (!userRepository.existsByUsername("manager")) {
+            User manager = User.builder()
+                    .username("manager")
+                    .password(passwordEncoder.encode("password"))
+                    .email("manager@example.com")
+                    .role(UserRole.MANAGER)
+                    .build();
+            userRepository.save(manager);
+        }
+
+        // Create superadmin if it doesn't exist
+        if (!userRepository.existsByUsername("superadmin")) {
+            User superAdmin = User.builder()
+                    .username("superadmin")
+                    .password(passwordEncoder.encode("password"))
+                    .email("superadmin@gmail.com")
+                    .role(UserRole.ADMIN)
+                    .build();
+            userRepository.save(superAdmin);
+        }
+
+    }
+}

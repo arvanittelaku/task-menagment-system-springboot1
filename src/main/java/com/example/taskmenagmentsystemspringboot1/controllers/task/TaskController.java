@@ -3,12 +3,16 @@ package com.example.taskmenagmentsystemspringboot1.controllers.task;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.CreateTaskDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.UpdateTaskDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.ViewTaskDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserProfileDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
 import com.example.taskmenagmentsystemspringboot1.entities.task.TaskStatus;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
 import com.example.taskmenagmentsystemspringboot1.service.TaskService;
 import com.example.taskmenagmentsystemspringboot1.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +27,8 @@ public class TaskController {
     private final UserService userService;
 
     @PostMapping
-    public Task createTask(@RequestBody CreateTaskDto createTaskDto) {
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
+    public Task createTask(@RequestBody @Valid CreateTaskDto createTaskDto) {
         return taskService.createTask(createTaskDto);
     }
 
@@ -33,23 +38,27 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public Task updateTaskById(@PathVariable Long id, @RequestBody UpdateTaskDto updateTaskDto) {
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
+    public Task updateTaskById(@PathVariable Long id, @RequestBody @Valid UpdateTaskDto updateTaskDto) {
         return taskService.updateTask(id, updateTaskDto);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     public void deleteTaskById(@PathVariable Long id) {
         taskService.deleteTask(id);
     }
 
-    @GetMapping("/current-user/{user-id}")
+    @GetMapping("/current-user/{userId}")
+    @PreAuthorize("hasRole('USER')")
     public List<Task> getTasksForCurrentUser(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
         String usernameFromToken = principal.getUsername();
-        User user = userService.findUserByUsername(usernameFromToken);
+        UserProfileDto user = userService.findUserByUsername(usernameFromToken);
         return taskService.getTasksForCurrentUser(user);
     }
 
     @PostMapping("/assign/{taskId}/{userId}")
+    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
     public Task assignTaskToUser(@PathVariable Long taskId, @PathVariable Long userId) {
         User user = new User(); // Fetch user by ID from the database
         user.setId(userId);
@@ -58,6 +67,7 @@ public class TaskController {
         return taskService.assignTaskToUser(user, task);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/status/{taskId}")
     public Task updateTaskStatus(@PathVariable Long taskId, @RequestParam TaskStatus newStatus) {
         return taskService.updateTaskStatus(taskId, newStatus);

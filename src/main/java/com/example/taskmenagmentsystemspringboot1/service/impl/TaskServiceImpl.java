@@ -3,6 +3,7 @@ package com.example.taskmenagmentsystemspringboot1.service.impl;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.CreateTaskDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.UpdateTaskDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.ViewTaskDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserProfileDto;
 import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
 import com.example.taskmenagmentsystemspringboot1.entities.task.TaskStatus;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
@@ -57,7 +58,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<Task> getTasksForCurrentUser(User user) {
+    public List<Task> getTasksForCurrentUser(UserProfileDto user) {
         var existingUser = userRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return existingUser.getTasks().isEmpty() ? List.of() : existingUser.getTasks();

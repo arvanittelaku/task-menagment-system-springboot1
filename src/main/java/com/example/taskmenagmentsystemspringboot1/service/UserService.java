@@ -1,9 +1,6 @@
 package com.example.taskmenagmentsystemspringboot1.service;
 
-import com.example.taskmenagmentsystemspringboot1.dtos.user.CreateUserDto;
-import com.example.taskmenagmentsystemspringboot1.dtos.user.LoginUserDto;
-import com.example.taskmenagmentsystemspringboot1.dtos.user.UserProfileDto;
-import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.*;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
 import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
 import org.springframework.stereotype.Service;
@@ -18,7 +15,9 @@ public interface UserService {
     void registerManager(CreateUserDto createUserDto);
 
     UserViewDto getUserById(Long id);
-    List<User> getAllUsersByRole(UserRole role);
-    User findUserByUsername(String username);
-
+    List<UserViewDto> getAllUsersByRole(UserRole role);
+    UserProfileDto findUserByUsername(String username);
+    void createUser(CreateUserDto createUserDto);
+    List<UserViewDto> getAllManagers();
+    UserProfileDto updateUser(UpdateUserDto userDto);
 }

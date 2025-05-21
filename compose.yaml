@@ -4,6 +4,6 @@ services:
     environment:
       - 'POSTGRES_DB=task-db'
       - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      - 'POSTGRES_USER=postgres'
     ports:
       - '5432:5432'

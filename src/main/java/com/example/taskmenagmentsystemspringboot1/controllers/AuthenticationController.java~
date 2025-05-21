@@ -10,7 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
+@RequestMapping("/auth/api/v1")
 @RestController
 public class AuthenticationController {
 
@@ -21,7 +21,8 @@ public class AuthenticationController {
     private MyUserDetailsService userDetailsService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private com.example.taskmenagmentsystemspringboot1.security.JWTUtil jwtUtil;
+
 
     @PostMapping("/authenticate")
     public AuthenticationResponse createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
@@ -43,12 +44,16 @@ public class AuthenticationController {
     }
 
 
+
     @PostMapping("/refresh-token")
     public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshToken refreshToken) {
-        if (jwtUtil.validateRefreshToken(refreshToken.getToken())) {
+        if (jwtUtil.validateToken(refreshToken.getToken(), refreshToken.getToken())) {
             String username = jwtUtil.extractUsername(refreshToken.getToken());
             return ResponseEntity.ok(new AuthenticationResponse(jwtUtil.generateToken(username)));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
+
+
+
 }

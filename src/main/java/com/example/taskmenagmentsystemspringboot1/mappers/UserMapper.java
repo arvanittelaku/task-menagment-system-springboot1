@@ -7,11 +7,14 @@ import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
 import org.mapstruct.Mapper;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     User fromCreateToUser(CreateUserDto createUserDto);
     User fromUpdateToUser(UpdateUserDto updateUserDto);
     UserViewDto fromUserToView(User user);
     UserProfileDto fromUserToProfile(User user);
+    List<UserViewDto> fromEntityToViews(List<User> users);
 
 }
