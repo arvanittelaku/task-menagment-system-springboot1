@@ -24,5 +24,4 @@ public interface UserService {
     User findEntityByUsername(String username);
     List<UserViewDto> findAll();
     UserViewDto findById(Long id);
-    UserDto getUserProfileById(Long id);
 }

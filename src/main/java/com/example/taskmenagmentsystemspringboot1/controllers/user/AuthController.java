@@ -1,8 +1,11 @@
 package com.example.taskmenagmentsystemspringboot1.controllers.user;
 
-import com.example.taskmenagmentsystemspringboot1.dtos.user.LoginUserDto;
-import com.example.taskmenagmentsystemspringboot1.dtos.user.UserProfileDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.auth.AuthResponse;
+import com.example.taskmenagmentsystemspringboot1.dtos.auth.LoginRequest;
+import com.example.taskmenagmentsystemspringboot1.security.AppUserDetails;
 import com.example.taskmenagmentsystemspringboot1.service.AuthenticationService;
+import com.example.taskmenagmentsystemspringboot1.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,27 +16,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1/")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationService service;
+    private final UserService userService;
 
-
-    @PostMapping("/login")
+    @PostMapping("auth/login")
     @CrossOrigin(origins = "*")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<UserProfileDto> login(@RequestBody LoginUserDto request) {
+    public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
         // hapi 1: Authenticate user
-        var user = service.authenticate(request.getUsername(), request.getPassword());
+        var user = service.authenticate(request.getEmail(), request.getPassword());
 
         // hapi 2: Generate token
         var token = service.generateToken(user);
 
-        // Create UserProfileDto with user details
-        var userProfileDto = new UserProfileDto();
-        userProfileDto.setUsername(user.getUsername());
-        userProfileDto.setToken(token);
-        
-        return ResponseEntity.ok(userProfileDto);
+        var authResponse = new AuthResponse(token, 86400000L); // 1 day
+
+        return ResponseEntity.ok(authResponse);
     }
+
+
 }

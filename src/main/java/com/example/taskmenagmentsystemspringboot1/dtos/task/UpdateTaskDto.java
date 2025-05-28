@@ -17,7 +17,7 @@ import java.time.LocalDate;
 public class UpdateTaskDto {
     private String title;
     private String description;
-    private LocalDate dueDate;
+    private LocalDate deadline;
     private TaskPriority priority;
     private TaskStatus status;
     private User assignedToId;

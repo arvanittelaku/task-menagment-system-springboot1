@@ -1,8 +1,6 @@
 package com.example.taskmenagmentsystemspringboot1.service.impl;
 
-import com.example.taskmenagmentsystemspringboot1.dtos.task.ViewTaskDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.user.*;
-import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
 import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
 import com.example.taskmenagmentsystemspringboot1.exceptions.EntityNotFoundException;
@@ -13,47 +11,43 @@ import com.example.taskmenagmentsystemspringboot1.repositories.UserRepository;
 import com.example.taskmenagmentsystemspringboot1.service.TaskService;
 import com.example.taskmenagmentsystemspringboot1.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TaskService taskService;
     private final TaskMapper taskMapper;
-    private  UserMapper userMapper;
-     // Inject JwtUtil for token generation
-
-
+    private final UserMapper userMapper;  // <-- make this final and injected via constructor
 
     @Override
     public void registerManager(CreateUserDto createUserDto) {
-        var exists = userRepository.findByUsername(createUserDto.getUsername());
-        if (exists != null) {
+        String username = createUserDto.getUsername().trim().toLowerCase();
+        String email = createUserDto.getEmail().trim().toLowerCase();
+        createUserDto.setUsername(username);
+        createUserDto.setEmail(email);
+
+        if (userRepository.existsByUsername(username)) {
             throw new UsernameExistsException("Username already exists");
         }
 
         var user = userMapper.fromCreateToUser(createUserDto);
-
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         userRepository.save(user);
     }
 
-
     @Override
     public UserViewDto getUserById(Long id) {
-        var exists = userRepository.findById(id);
-        if (exists.isPresent()) {
-            return userMapper.fromUserToView(exists.get());
-        }
-        return null;
+        return userRepository.findById(id)
+                .map(userMapper::fromUserToView)
+                .orElse(null);
     }
 
     @Override
@@ -63,26 +57,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserViewDto findUserByUsername(String username) {
-        var user = userRepository.findByUsername(username);
-        if (user.isPresent()) {
-            return userMapper.fromUserToView(user.get());
-        }
-        return null;
+        return userRepository.findByUsername(username)
+                .map(userMapper::fromUserToView)
+                .orElse(null);
     }
 
     @Override
-    public void createUser(CreateUserDto createUserDto) {
-        var exists = userRepository.findByUsername(createUserDto.getUsername());
-        if (exists != null) {
+    public UserViewDto createUser(CreateUserDto createUserDto) {
+        if (userRepository.existsByUsername(createUserDto.getUsername())) {
             throw new UsernameExistsException("Username already exists");
         }
 
         var user = userMapper.fromCreateToUser(createUserDto);
-
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        userRepository.save(user);
+        return userMapper.fromUserToView(userRepository.save(user));
     }
+
 
     @Override
     public List<UserViewDto> getAllManagers() {
@@ -90,28 +81,44 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserProfileDto updateUser(UpdateUserDto userDto) {
-        var exists = userRepository.findById(userDto.getId());
-        if (exists.isPresent()) {
+    public void updateUser(long id, UpdateUserDto userDto) {
+        userRepository.findById(userDto.getId()).ifPresent(existingUser -> {
             var user = userMapper.fromUpdateToUser(userDto);
             user.setId(userDto.getId());
-            return userMapper.fromUserToProfile(userRepository.save(user));
-        }
-        return null;
+            userRepository.save(user);
+        });
+    }
+
+    @Override
+    public User findEntityByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
+    }
+
+    @Override
+    public List<UserViewDto> findAll() {
+        return userMapper.fromEntityToViews(userRepository.findAll());
+    }
+
+    @Override
+    public UserViewDto findById(Long id) {
+        return userRepository.findById(id)
+                .map(userMapper::fromUserToView)
+                .orElse(null);
     }
 
     @Override
     public void deleteUser(Long id) {
-        var exists = userRepository.findById(id);
-        if (exists.isPresent()) {
+        if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
         } else {
             throw new EntityNotFoundException("User not found with id: " + id);
         }
     }
-
-    
-
-
+    @Override
+    public UserDto getUserProfileById(Long id) {
+        return userRepository.findById(id)
+                .map(userMapper::fromUserToProfile)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
 
 }

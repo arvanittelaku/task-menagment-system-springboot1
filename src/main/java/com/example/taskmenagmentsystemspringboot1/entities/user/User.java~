@@ -55,7 +55,7 @@ public class User {
     public static User createSuperAdmin(PasswordEncoder encoder) {
         return User.builder()
                 .username("superadmin")
-                .password(encoder.encode("superadmin"))
+                .password(encoder.encode("password"))
                 .email("superadmin@gmail.com")
                 .role(UserRole.ADMIN)
                 .build();

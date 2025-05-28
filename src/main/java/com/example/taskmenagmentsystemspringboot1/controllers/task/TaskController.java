@@ -2,17 +2,19 @@ package com.example.taskmenagmentsystemspringboot1.controllers.task;
 
 import com.example.taskmenagmentsystemspringboot1.dtos.task.CreateTaskDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.UpdateTaskDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.task.UpdateTaskStatus;
 import com.example.taskmenagmentsystemspringboot1.dtos.task.ViewTaskDto;
-import com.example.taskmenagmentsystemspringboot1.dtos.user.UserProfileDto;
-import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
 import com.example.taskmenagmentsystemspringboot1.entities.task.TaskStatus;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
+import com.example.taskmenagmentsystemspringboot1.security.AppUserDetails;
 import com.example.taskmenagmentsystemspringboot1.service.TaskService;
 import com.example.taskmenagmentsystemspringboot1.service.UserService;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,58 +22,59 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/tasks")
+@RequestMapping("/api/v1/tasks")
 public class TaskController {
 
     private final TaskService taskService;
     private final UserService userService;
 
-    @PostMapping
-    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
-    public Task createTask(@RequestBody @Valid CreateTaskDto createTaskDto) {
-        return taskService.createTask(createTaskDto);
+    @GetMapping
+    public ResponseEntity<List<ViewTaskDto>> findAll() {
+        return ResponseEntity.ok(taskService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ViewTaskDto getTaskById(@PathVariable Long id) {
-        return taskService.getTask(id);
+    public ResponseEntity<ViewTaskDto> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getTask(id));
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<ViewTaskDto> createTask(@RequestBody CreateTaskDto dto,
+                                              @AuthenticationPrincipal AppUserDetails principal) {
+        ViewTaskDto task = taskService.createTask(dto, principal.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(task);
+    }
+
+
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
-    public Task updateTaskById(@PathVariable Long id, @RequestBody @Valid UpdateTaskDto updateTaskDto) {
-        return taskService.updateTask(id, updateTaskDto);
+    public ResponseEntity<ViewTaskDto> update(
+            @PathVariable Long id, 
+            @RequestBody @Valid UpdateTaskDto updateTaskDto,
+            @AuthenticationPrincipal AppUserDetails principal) {
+        return ResponseEntity.ok(taskService.updateTask(id, updateTaskDto, principal.getId()));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
-    public void deleteTaskById(@PathVariable Long id) {
-        taskService.deleteTask(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+                                       @AuthenticationPrincipal AppUserDetails principal) {
+        taskService.deleteTask(id, principal.getId());
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/current-user/{userId}")
-    @PreAuthorize("hasRole('USER')")
-    public List<Task> getTasksForCurrentUser(@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-        String usernameFromToken = principal.getUsername();
-        UserProfileDto user = userService.findUserByUsername(usernameFromToken);
-        return taskService.getTasksForCurrentUser(user);
+    @PatchMapping("{id}/status")
+    public ResponseEntity<Void> updateStatus(@PathVariable Long id,
+                                                    @RequestBody UpdateTaskStatus dto,
+                                                    @AuthenticationPrincipal AppUserDetails principal) {
+        taskService.updateTaskStatus(id,principal.getId(),dto.getStatus());
+        return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/assign/{taskId}/{userId}")
-    @PreAuthorize("hasRole('MANAGER') or hasRole('ADMIN')")
-    public Task assignTaskToUser(@PathVariable Long taskId, @PathVariable Long userId) {
-        User user = new User(); // Fetch user by ID from the database
-        user.setId(userId);
-        Task task = new Task(); // Fetch task by ID from the database
-        task.setId(taskId);
-        return taskService.assignTaskToUser(user, task);
+    @GetMapping("/my-tasks")
+    public ResponseEntity<List<ViewTaskDto>> getTasksForCurrentUser(@AuthenticationPrincipal AppUserDetails principal) {
+        List<ViewTaskDto> tasks = taskService.getTasksForCurrentUser(principal.getId());
+        return ResponseEntity.ok(tasks);
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @PatchMapping("/status/{taskId}")
-    public Task updateTaskStatus(@PathVariable Long taskId, @RequestParam TaskStatus newStatus) {
-        return taskService.updateTaskStatus(taskId, newStatus);
-    }
 
 
 

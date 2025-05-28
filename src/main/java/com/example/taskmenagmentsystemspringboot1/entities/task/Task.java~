@@ -40,11 +40,10 @@ public class Task {
 
     @ManyToOne
     @JoinColumn(name = "assigned_to_id",nullable = false)
-    @Column(nullable = false)
     private User assignedTo;
 
     @ManyToOne
-    @Column(nullable = false)
+    @JoinColumn(name = "created_by_id",nullable = false)
     private User createdBy;
 
 

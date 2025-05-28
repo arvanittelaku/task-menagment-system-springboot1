@@ -6,7 +6,6 @@ import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
 import com.example.taskmenagmentsystemspringboot1.service.UserService;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,12 +47,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/register/manager")
-    public ResponseEntity<Void> registerManager(@RequestBody @Valid CreateUserDto createUserDto) {
-        userService.registerManager(createUserDto);
         return ResponseEntity.noContent().build();
     }
 

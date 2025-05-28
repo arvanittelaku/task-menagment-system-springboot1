@@ -24,7 +24,7 @@ import java.util.List;
 public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
-    private final TaskMapper taskMapper;
+    private TaskMapper taskMapper;
 
 
 
@@ -41,38 +41,12 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public ViewTaskDto updateTask(Long taskId, UpdateTaskDto updateTaskDto, Long userId) {
-        // Find the task or throw exception if not found
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
-
-        // Check if the user is the creator of the task
-        if (!task.getCreatedBy().getId().equals(userId)) {
-            throw new AccessDeniedException("You are not allowed to update this task");
-        }
-
-        // Update fields if they are not null in the DTO
-        if (updateTaskDto.getTitle() != null) {
-            task.setTitle(updateTaskDto.getTitle());
-        }
-        
-        if (updateTaskDto.getDescription() != null) {
-            task.setDescription(updateTaskDto.getDescription());
-        }
-        
-        if (updateTaskDto.getStatus() != null) {
-            task.setStatus(updateTaskDto.getStatus());
-        }
-        
-        if (updateTaskDto.getPriority() != null) {
-            task.setPriority(updateTaskDto.getPriority());
-        }
-        
-        if (updateTaskDto.getDeadline() != null) {
-            task.setDeadline(updateTaskDto.getDeadline());
-        }
-
-        // Save and return the updated task
+    public ViewTaskDto updateTask(Long id, UpdateTaskDto updateTaskDto) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        task.setTitle(updateTaskDto.getTitle());
+        task.setDescription(updateTaskDto.getDescription());
+        task.setStatus(updateTaskDto.getStatus());
         Task updatedTask = taskRepository.save(task);
         return taskMapper.fromEntityToView(updatedTask);
     }

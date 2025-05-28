@@ -8,9 +8,7 @@ import java.util.List;
 
 public interface TaskRepository extends JpaRepository<Task,Long> {
 
-    void removeById(Long id);
-
     List<Task> findAllByAssignedTo(User assignedTo);
 
-    List<Task> findAllByAssignedTo_Id(Long assignedToId);
+    List<Task> findAllByAssignedToId(Long id);
 }

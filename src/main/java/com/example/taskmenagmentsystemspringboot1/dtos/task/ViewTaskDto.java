@@ -1,5 +1,6 @@
 package com.example.taskmenagmentsystemspringboot1.dtos.task;
 
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserDto;
 import com.example.taskmenagmentsystemspringboot1.entities.task.TaskPriority;
 import com.example.taskmenagmentsystemspringboot1.entities.task.TaskStatus;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
@@ -18,16 +19,14 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ViewTaskDto {
+
     @NotNull(message = "Id is required")
-    @NotBlank(message = "Id is required")
     private Long id;
 
-    @NotNull(message = "Title is required")
     @NotBlank(message = "Title is required")
     @Size(min = 5, message = "Title must be at least 5 characters long")
     private String title;
 
-    @NotNull(message = "Description is required")
     @NotBlank(message = "Description is required")
     @Size(min = 10, message = "Description must be at least 10 characters long")
     private String description;
@@ -39,19 +38,14 @@ public class ViewTaskDto {
     private TaskPriority priority;
 
     @NotNull(message = "Deadline is required")
-    @NotBlank(message = "Deadline is required")
     private LocalDate deadline;
 
     @NotNull(message = "Created at is required")
-    @NotBlank(message = "Created at is required")
     private LocalDate createdAt;
 
     @NotNull(message = "Assigned to is required")
-    @NotBlank(message = "Assigned to is required")
-    private User assignedTo;
+    private UserDto assignedTo;
 
     @NotNull(message = "Created by is required")
-    @NotBlank(message = "Created by is required")
-    private User createdBy;
-
+    private UserDto createdBy;
 }
