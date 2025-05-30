@@ -89,19 +89,24 @@ public class TaskServiceImpl implements TaskService {
 
         TaskStatus currentStatus = task.getStatus();
 
-        // Prevent invalid status transitions
-        if (currentStatus == TaskStatus.IN_PROGRESS && newStatus == TaskStatus.PENDING) {
-            throw new IllegalStateException("Cannot move a task from IN_PROGRESS back to PENDING.");
-        }
+        System.out.println("Current status: " + currentStatus);
+        System.out.println("New status: " + newStatus);
 
-        // Optional: Prevent COMPLETED from being changed
         if (currentStatus == TaskStatus.COMPLETED) {
             throw new IllegalStateException("Cannot change the status of a COMPLETED task.");
         }
 
+        if (currentStatus == TaskStatus.CANCELED) {
+            throw new IllegalStateException("Cannot change the status of a CANCELED task.");
+        }
+
+        if (newStatus == TaskStatus.PENDING) {
+            throw new IllegalStateException("Cannot change status back to PENDING.");
+        }
         task.setStatus(newStatus);
         taskRepository.save(task);
     }
+
 
     @Override
     public List<ViewTaskDto> findAll() {

@@ -19,7 +19,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -62,11 +64,17 @@ public class TaskController {
     }
 
     @PatchMapping("{id}/status")
-    public ResponseEntity<Void> updateStatus(@PathVariable Long id,
-                                                    @RequestBody UpdateTaskStatus dto,
-                                                    @AuthenticationPrincipal AppUserDetails principal) {
-        taskService.updateTaskStatus(id,principal.getId(),dto.getStatus());
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> updateStatus(
+            @PathVariable Long id,
+            @RequestBody UpdateTaskStatus request,
+            @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        try {
+            taskService.updateTaskStatus(id, principal.getId(), request.getStatus());
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+        }
     }
 
     @GetMapping("/my-tasks")
