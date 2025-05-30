@@ -79,13 +79,18 @@ public class UserServiceImpl implements UserService {
     public List<UserViewDto> getAllManagers() {
         return userMapper.fromEntityToViews(userRepository.findByRole(UserRole.MANAGER));
     }
-
     @Override
     public void updateUser(long id, UpdateUserDto userDto) {
-        userRepository.findById(userDto.getId()).ifPresent(existingUser -> {
-            var user = userMapper.fromUpdateToUser(userDto);
-            user.setId(userDto.getId());
-            userRepository.save(user);
+        userRepository.findById(id).ifPresentOrElse(existingUser -> {
+            existingUser.setUsername(userDto.getUsername());
+            existingUser.setEmail(userDto.getEmail());
+
+            if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
+                existingUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
+            }
+            userRepository.save(existingUser);
+        }, () -> {
+            throw new EntityNotFoundException("User not found with id: " + id);
         });
     }
 
@@ -120,5 +125,6 @@ public class UserServiceImpl implements UserService {
                 .map(userMapper::fromUserToDto)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
+
 
 }

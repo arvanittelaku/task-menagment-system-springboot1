@@ -1,6 +1,7 @@
 package com.example.taskmenagmentsystemspringboot1.entities.user;
 
 import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
+import com.fasterxml.jackson.annotation.JsonIgnore; // Ensure this import is present
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,8 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "users")
+@ToString(exclude = "tasks") // Good for Lombok's toString
+@EqualsAndHashCode(exclude = "tasks") // Good for Lombok's equals/hashCode
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,25 +35,10 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
-    @OneToMany(mappedBy = "createdBy")
+    // ONE list for all tasks assigned to the user
+    @OneToMany(mappedBy = "assignedTo")
+    @JsonIgnore // <-- Correctly applied
     private List<Task> tasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> assignedTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> completedTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> canceledTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> inProgressTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> pendingTasks;
-
-
 
     public static User createSuperAdmin(PasswordEncoder encoder) {
         return User.builder()

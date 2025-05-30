@@ -2,6 +2,7 @@ package com.example.taskmenagmentsystemspringboot1.controllers.user;
 
 import com.example.taskmenagmentsystemspringboot1.dtos.user.CreateUserDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.user.UpdateUserDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserDto;
 import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
 import com.example.taskmenagmentsystemspringboot1.service.UserService;
@@ -56,6 +57,25 @@ public class UserController {
         userService.registerManager(createUserDto);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/role/{role}")
+    public ResponseEntity<List<UserViewDto>> getUsersByRole(@PathVariable UserRole role) {
+        return ResponseEntity.ok(userService.getAllUsersByRole(role));
+    }
+
+    @GetMapping("/username/{username}")
+    public ResponseEntity<UserViewDto> findByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(userService.findUserByUsername(username));
+    }
+    @GetMapping("/managers")
+    public ResponseEntity<List<UserViewDto>> getAllManagers() {
+        return ResponseEntity.ok(userService.getAllManagers());
+    }
+
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<UserDto> getUserProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserProfileById(id));
+    }
+
 
 
 
