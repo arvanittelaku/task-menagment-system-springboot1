@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5174")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/tasks")
@@ -36,23 +36,32 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ViewTaskDto> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(taskService.getTask(id));
+    public ResponseEntity<ViewTaskDto> findById(@PathVariable Long id,
+                                                @AuthenticationPrincipal AppUserDetails principal) {
+        return ResponseEntity.ok(taskService.getTask(id, principal.getId()));
     }
 
     @PostMapping("/create")
     public ResponseEntity<ViewTaskDto> createTask(@RequestBody CreateTaskDto dto,
-                                              @AuthenticationPrincipal AppUserDetails principal) {
+                                                  @AuthenticationPrincipal AppUserDetails principal) {
         ViewTaskDto task = taskService.createTask(dto, principal.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(task);
     }
 
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ViewTaskDto> update(
-            @PathVariable Long id, 
+    @PutMapping("/{id}/update")
+    public ResponseEntity<?> update(
+            @PathVariable Long id,
             @RequestBody @Valid UpdateTaskDto updateTaskDto,
             @AuthenticationPrincipal AppUserDetails principal) {
+
+        var currentUser = userService.findUserByUsername(principal.getUsername());
+        var task = taskService.getTask(id, principal.getId()); // ✅ updated method call
+
+        if (!task.getCreatedBy().getId().equals(currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not allowed to update this task.");
+        }
+
         return ResponseEntity.ok(taskService.updateTask(id, updateTaskDto, principal.getId()));
     }
 
@@ -82,8 +91,6 @@ public class TaskController {
         List<ViewTaskDto> tasks = taskService.getTasksForCurrentUser(principal.getId());
         return ResponseEntity.ok(tasks);
     }
-
-
 
 
 }

@@ -15,7 +15,7 @@ import java.util.List;
 public interface TaskService {
     void deleteTask(Long taskId, Long userId);
     ViewTaskDto updateTask(Long taskId, UpdateTaskDto updateTaskDto, Long userId);
-    ViewTaskDto getTask(Long id);
+    ViewTaskDto getTask(Long taskId,Long userId);
     ViewTaskDto createTask(CreateTaskDto task,Long userId);
     List<ViewTaskDto> getTasksForCurrentUser(Long id);
     Task assignTaskToUser(User user,Task task);

@@ -4,22 +4,24 @@ import com.example.taskmenagmentsystemspringboot1.dtos.task.ViewTaskDto;
 import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
+import org.mapstruct.Mappings;
 
-@Mapper(componentModel = "spring", uses = UserMapper.class)
+@Mapper(componentModel = "spring")
 public interface TaskMapper {
 
-    TaskMapper INSTANCE = Mappers.getMapper(TaskMapper.class);
+    @Mappings({
+            @Mapping(target = "id", source = "task.id"),
+            @Mapping(target = "title", source = "task.title"),
+            @Mapping(target = "description", source = "task.description"),
+            @Mapping(target = "status", source = "task.status"),
+            @Mapping(target = "priority", source = "task.priority"),
+            @Mapping(target = "deadline", source = "task.deadline"),
+            @Mapping(target = "createdAt", source = "task.createdAt"),
+            @Mapping(target = "createdBy", source = "task.createdBy"),
+            @Mapping(target = "assignedTo", source = "task.assignedTo")
+    })
+    ViewTaskDto fromEntityToView(Task task, Long currentUserId);
 
-    @Mapping(source = "assignedTo", target = "assignedTo")
-    @Mapping(source = "createdBy", target = "createdBy")
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "title", source = "title")
-    @Mapping(target = "description", source = "description")
-    @Mapping(target = "status", source = "status")
-    @Mapping(target = "priority", source = "priority")
-    @Mapping(target = "deadline", source = "deadline")
-    @Mapping(target = "createdAt", source = "createdAt")
+    // Optionally, you might still want a simpler version:
     ViewTaskDto fromEntityToView(Task task);
 }

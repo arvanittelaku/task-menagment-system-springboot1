@@ -48,4 +48,8 @@ public class ViewTaskDto {
 
     @NotNull(message = "Created by is required")
     private UserDto createdBy;
+
+    private boolean canEdit;
+
+
 }

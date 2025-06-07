@@ -45,13 +45,11 @@ public class TaskServiceImpl implements TaskService {
         // Find the task or throw exception if not found
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
-
-        // Check if the user is the creator of the task
         if (!task.getCreatedBy().getId().equals(userId)) {
             throw new AccessDeniedException("You are not allowed to update this task");
         }
 
-        // Update fields if they are not null in the DTO
+
         if (updateTaskDto.getTitle() != null) {
             task.setTitle(updateTaskDto.getTitle());
         }
@@ -71,8 +69,6 @@ public class TaskServiceImpl implements TaskService {
         if (updateTaskDto.getDeadline() != null) {
             task.setDeadline(updateTaskDto.getDeadline());
         }
-
-        // Save and return the updated task
         Task updatedTask = taskRepository.save(task);
         return taskMapper.fromEntityToView(updatedTask);
     }
@@ -83,30 +79,29 @@ public class TaskServiceImpl implements TaskService {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
-        if (!task.getCreatedBy().getId().equals(userId)) {
+        if (!task.getAssignedTo().getId().equals(userId)) {
             throw new AccessDeniedException("You are not allowed to update this task.");
         }
 
         TaskStatus currentStatus = task.getStatus();
+        boolean valid = switch (currentStatus) {
+            case PENDING -> newStatus == TaskStatus.IN_PROGRESS ||
+                    newStatus == TaskStatus.COMPLETED ||
+                    newStatus == TaskStatus.CANCELED;
 
-        System.out.println("Current status: " + currentStatus);
-        System.out.println("New status: " + newStatus);
+            case IN_PROGRESS -> newStatus == TaskStatus.COMPLETED ||
+                    newStatus == TaskStatus.CANCELED;
 
-        if (currentStatus == TaskStatus.COMPLETED) {
-            throw new IllegalStateException("Cannot change the status of a COMPLETED task.");
+            case COMPLETED, CANCELED -> false;
+        };
+
+        if (!valid) {
+            throw new IllegalStateException("Invalid status change from " + currentStatus + " to " + newStatus);
         }
 
-        if (currentStatus == TaskStatus.CANCELED) {
-            throw new IllegalStateException("Cannot change the status of a CANCELED task.");
-        }
-
-        if (newStatus == TaskStatus.PENDING) {
-            throw new IllegalStateException("Cannot change status back to PENDING.");
-        }
         task.setStatus(newStatus);
         taskRepository.save(task);
     }
-
 
     @Override
     public List<ViewTaskDto> findAll() {
@@ -117,9 +112,15 @@ public class TaskServiceImpl implements TaskService {
 
 
     @Override
-    public ViewTaskDto getTask(Long id) {
-        var task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
-        return taskMapper.fromEntityToView(task);
+    public ViewTaskDto getTask(Long taskId, Long currentUserId) {
+        System.out.println("Looking for task ID: " + taskId + ", for user: " + currentUserId);
+
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
+
+        System.out.println("Task found. AssignedTo: " + task.getAssignedTo().getId() + ", CreatedBy: " + task.getCreatedBy().getId());
+
+        return taskMapper.fromEntityToView(task, currentUserId);
     }
 
 
