@@ -3,6 +3,8 @@ package com.example.taskmenagmentsystemspringboot1.entities.user;
 import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -32,6 +34,12 @@ public class User {
     @Column(nullable = false)
     private UserRole role;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_manager_id", foreignKey = @ForeignKey(name = "fk_created_by_manager", value = ConstraintMode.CONSTRAINT))
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private User createdByManager;
+
+
     @OneToMany(mappedBy = "createdBy")
     private List<Task> tasks;
 
@@ -49,8 +57,6 @@ public class User {
 
     @OneToMany(mappedBy = "assignedTo")
     private List<Task> pendingTasks;
-
-
 
     public static User createSuperAdmin(PasswordEncoder encoder) {
         return User.builder()

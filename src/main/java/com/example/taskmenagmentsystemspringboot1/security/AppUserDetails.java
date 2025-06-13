@@ -34,4 +34,7 @@ public class AppUserDetails implements UserDetails {
     }
 
 
+    public String getRole() {
+        return user.getRole().name();
+    }
 }

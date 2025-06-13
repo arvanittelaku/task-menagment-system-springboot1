@@ -24,18 +24,20 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("auth/login")
-    @CrossOrigin(origins = "*")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest request) {
-        // hapi 1: Authenticate user
-        var user = service.authenticate(request.getEmail(), request.getPassword());
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
+        try {
+            // Step 1: Authenticate user
+            var user = service.authenticate(request.getEmail(), request.getPassword());
 
-        // hapi 2: Generate token
-        var token = service.generateToken(user);
+            // Step 2: Generate token
+            var token = service.generateToken(user);
+            var authResponse = new AuthResponse(token, 86400000L); // 1 day
 
-        var authResponse = new AuthResponse(token, 86400000L); // 1 day
-
-        return ResponseEntity.ok(authResponse);
+            return ResponseEntity.ok(authResponse);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid email or password");
+        }
     }
 
 

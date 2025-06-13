@@ -21,5 +21,7 @@ public interface TaskService {
     Task assignTaskToUser(User user,Task task);
     void updateTaskStatus(Long taskId, Long userId, TaskStatus newStatus);
     List<ViewTaskDto> findAll();
+    List<ViewTaskDto> getTasksCreatedBy(Long creatorId);
+    List<ViewTaskDto> getTasksAssignedTo(Long assigneeId);
 
 }

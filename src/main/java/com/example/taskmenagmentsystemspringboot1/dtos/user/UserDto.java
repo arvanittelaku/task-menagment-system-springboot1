@@ -9,6 +9,7 @@ public class UserDto {
     private String email;
     private String fullName;
     private String role;
-    // Add any other user profile fields you want to expose
+    private Long createdByManagerId;
+
 }
 

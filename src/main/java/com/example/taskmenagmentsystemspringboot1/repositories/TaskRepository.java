@@ -11,4 +11,6 @@ public interface TaskRepository extends JpaRepository<Task,Long> {
     List<Task> findAllByAssignedTo(User assignedTo);
 
     List<Task> findAllByAssignedToId(Long id);
+    List<Task> findAllByCreatedBy_Id(Long id);
+    List<Task> findAllByAssignedTo_Id(Long id);
 }

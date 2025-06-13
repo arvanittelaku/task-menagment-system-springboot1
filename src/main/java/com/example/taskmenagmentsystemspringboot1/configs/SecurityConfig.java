@@ -54,16 +54,15 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
                         .requestMatchers("/api/v1/auth/login").permitAll()
-
-                        // Secured endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/create").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated() // Allow authenticated access to /users/me
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/register/user").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/register/manager").hasRole(ADMIN.name())
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").hasAnyRole(ADMIN.name(), MANAGER.name())
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasAnyRole(ADMIN.name(), MANAGER.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/by-role").hasAnyRole(ADMIN.name(), MANAGER.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/managers").hasRole(ADMIN.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAnyRole(ADMIN.name(), MANAGER.name(), USER.name())
-
                         .requestMatchers(HttpMethod.GET, "/api/v1/tasks").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tasks/{id}").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/tasks").authenticated()
@@ -72,7 +71,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/tasks/{id}").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/tasks/{id}/status").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tasks/my-tasks").authenticated()
-
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -81,22 +79,3 @@ public class SecurityConfig {
         return http.build();
     }
 }
-
-
-//    @Bean
-//    public UserDetailsService userDetailsService(UserRepository userRepository) {
-//        var user = new AppUserDetailsService(userRepository);
-//
-//        String email = "admin@test.com";
-//        userRepository.findByEmail(email)
-//                .orElseGet(() -> {
-//                    var admin = User.builder()
-//                            .username("admin")
-//                            .password(passwordEncoder().encode("password"))
-//                            .email(email)
-//                            .role(UserRole.ADMIN)
-//                            .build();
-//                    return userRepository.save(admin);
-//                });
-//        return user;
-//    }

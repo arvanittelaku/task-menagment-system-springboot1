@@ -6,6 +6,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface TaskMapper {
 
@@ -24,4 +26,5 @@ public interface TaskMapper {
 
     // Optionally, you might still want a simpler version:
     ViewTaskDto fromEntityToView(Task task);
+    List<ViewTaskDto> fromEntitiesToViews(List<Task> tasks);
 }

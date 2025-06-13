@@ -29,4 +29,8 @@ public class UserViewDto {
     @Email
     private String email;
 
+    private UserRole role;
+
+    private Long createdByManagerId; 
+
 }

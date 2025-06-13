@@ -14,4 +14,8 @@ public interface UserRepository extends JpaRepository<User,Long> {
     List<User> findByRole(UserRole role);
 
     boolean existsByUsername(String username);
+
+    List<User> findByCreatedByManager(User createdByManager);
+
+    List<User> findByRoleAndCreatedByManager(UserRole role, User createdByManager);
 }
