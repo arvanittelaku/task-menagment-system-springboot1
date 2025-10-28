@@ -1,4 +1,0 @@
-package com.example.taskmenagmentsystemspringboot1.dtos.auth;
-
-public class LoginRequest {
-}

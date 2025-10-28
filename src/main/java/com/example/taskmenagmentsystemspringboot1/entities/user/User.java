@@ -41,22 +41,10 @@ public class User {
 
 
     @OneToMany(mappedBy = "createdBy")
-    private List<Task> tasks;
+    private List<Task> createdTasks;
 
     @OneToMany(mappedBy = "assignedTo")
     private List<Task> assignedTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> completedTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> canceledTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> inProgressTasks;
-
-    @OneToMany(mappedBy = "assignedTo")
-    private List<Task> pendingTasks;
 
     public static User createSuperAdmin(PasswordEncoder encoder) {
         return User.builder()

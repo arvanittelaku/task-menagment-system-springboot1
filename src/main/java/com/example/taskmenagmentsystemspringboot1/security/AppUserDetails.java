@@ -26,13 +26,16 @@ public class AppUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return user.getEmail(); // Use email as the principal identifier
+    }
+    
+    public String getActualUsername() {
+        return user.getUsername(); // For display purposes
     }
 
     public long getId() {
         return user.getId();
     }
-
 
     public String getRole() {
         return user.getRole().name();

@@ -29,7 +29,8 @@ public class CreateTaskDto {
 
     private TaskPriority priority;
 
-    @NotNull(message = "Assigned user ID is required")
+    // Optional: If not provided, task will be assigned to the creator (for personal
+    // tasks)
     private Long assignedToId;
 
 }

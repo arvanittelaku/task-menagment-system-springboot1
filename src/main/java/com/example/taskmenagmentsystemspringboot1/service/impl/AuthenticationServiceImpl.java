@@ -29,7 +29,9 @@ import java.util.Map;
 
         @Value("${jwt.secret}")
         private String secretKey;
-        private final Long expireTimeInMs = 86400000L; // 24h in milliseconds
+        
+        @Value("${jwt.expiration}")
+        private Long expireTimeInMs;
 
         @Override
         public UserDetails authenticate(String email, String password) {

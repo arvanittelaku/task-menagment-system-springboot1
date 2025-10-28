@@ -1,6 +1,11 @@
 package com.example.taskmenagmentsystemspringboot1.service.impl;
 
-import com.example.taskmenagmentsystemspringboot1.dtos.user.*;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.ChangePasswordDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.CreateUserDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UpdateProfileDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UpdateUserDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.user.UserViewDto;
 import com.example.taskmenagmentsystemspringboot1.entities.user.User;
 import com.example.taskmenagmentsystemspringboot1.entities.user.UserRole;
 import com.example.taskmenagmentsystemspringboot1.exceptions.EntityNotFoundException;
@@ -27,6 +32,24 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Override
+    public void registerPublicUser(CreateUserDto createUserDto) {
+        // Check if username or email already exists
+        if (userRepository.existsByUsername(createUserDto.getUsername())) {
+            throw new UsernameExistsException("Username already exists");
+        }
+
+        if (userRepository.findByEmail(createUserDto.getEmail()).isPresent()) {
+            throw new UsernameExistsException("Email already exists");
+        }
+
+        var user = userMapper.fromCreateToUser(createUserDto);
+        user.setRole(UserRole.USER); // Always register as USER
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        userRepository.save(user);
+    }
+
+    @Override
     public void registerManager(CreateUserDto createUserDto) {
         if (userRepository.existsByUsername(createUserDto.getUsername())) {
             throw new UsernameExistsException("Username already exists");
@@ -40,7 +63,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUser(CreateUserDto createUserDto, String creatorUsername) {
+    public void createUser(CreateUserDto createUserDto, String creatorEmail) {
         if (userRepository.existsByUsername(createUserDto.getUsername())) {
             throw new UsernameExistsException("Username already exists");
         }
@@ -49,8 +72,8 @@ public class UserServiceImpl implements UserService {
         user.setRole(UserRole.USER);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Use the passed creatorUsername to find the creator and set it
-        User creatorUser = userRepository.findByUsername(creatorUsername)
+        // Use the passed creatorEmail to find the creator and set it
+        User creatorUser = userRepository.findByEmail(creatorEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Creator user not found!"));
 
         if (creatorUser.getRole() == UserRole.MANAGER) {
@@ -72,8 +95,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserViewDto findUserByUsername(String username) {
-        return userRepository.findByUsername(username)
+    public UserViewDto findUserByUsername(String email) {
+        // Note: Despite method name, this now accepts email (principal identifier)
+        return userRepository.findByEmail(email)
                 .map(userMapper::fromUserToView)
                 .orElse(null);
     }
@@ -90,8 +114,8 @@ public class UserServiceImpl implements UserService {
             return Collections.emptyList();
         }
 
-        String currentUsername = authentication.getName();
-        User currentUser = userRepository.findByUsername(currentUsername)
+        String currentEmail = authentication.getName(); // Now returns email
+        User currentUser = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found!"));
 
         if (currentUser.getRole() == UserRole.ADMIN) {
@@ -110,8 +134,8 @@ public class UserServiceImpl implements UserService {
             return Collections.emptyList();
         }
 
-        String currentUsername = authentication.getName();
-        User currentUser = userRepository.findByUsername(currentUsername)
+        String currentEmail = authentication.getName(); // Now returns email
+        User currentUser = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Authenticated user not found!"));
 
         if (currentUser.getRole() == UserRole.ADMIN) {
@@ -137,7 +161,6 @@ public class UserServiceImpl implements UserService {
             throw new EntityNotFoundException("User not found with id: " + id);
         });
     }
-
 
     @Override
     public User findEntityByUsername(String username) {
@@ -174,5 +197,54 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserViewDto findById(Long id) {
         return userMapper.fromUserToView(userRepository.findById(id).orElse(null));
+    }
+
+    @Override
+    public UserDto getProfile(Long userId) {
+        return userRepository.findById(userId)
+                .map(userMapper::fromUserToDto)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
+
+    @Override
+    public void updateProfile(Long userId, UpdateProfileDto updateProfileDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Check if the new username is already taken by another user
+        if (!user.getUsername().equals(updateProfileDto.getUsername()) &&
+                userRepository.existsByUsername(updateProfileDto.getUsername())) {
+            throw new UsernameExistsException("Username already exists");
+        }
+
+        // Check if the new email is already taken by another user
+        if (!user.getEmail().equals(updateProfileDto.getEmail()) &&
+                userRepository.findByEmail(updateProfileDto.getEmail()).isPresent()) {
+            throw new UsernameExistsException("Email already exists");
+        }
+
+        user.setUsername(updateProfileDto.getUsername());
+        user.setEmail(updateProfileDto.getEmail());
+        userRepository.save(user);
+    }
+
+    @Override
+    public void changePassword(Long userId, ChangePasswordDto changePasswordDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        // Verify new passwords match
+        if (!changePasswordDto.getNewPassword().equals(changePasswordDto.getConfirmPassword())) {
+            throw new IllegalArgumentException("New passwords do not match");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+        userRepository.save(user);
     }
 }

@@ -1,225 +1,311 @@
-            package com.example.taskmenagmentsystemspringboot1.service.impl;
+package com.example.taskmenagmentsystemspringboot1.service.impl;
 
-            import com.example.taskmenagmentsystemspringboot1.dtos.task.CreateTaskDto;
-            import com.example.taskmenagmentsystemspringboot1.dtos.task.UpdateTaskDto;
-            import com.example.taskmenagmentsystemspringboot1.dtos.task.ViewTaskDto;
-            import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
-            import com.example.taskmenagmentsystemspringboot1.entities.task.TaskStatus;
-            import com.example.taskmenagmentsystemspringboot1.entities.user.User;
-            import com.example.taskmenagmentsystemspringboot1.exceptions.ResourceNotFoundException;
-            import com.example.taskmenagmentsystemspringboot1.mappers.TaskMapper;
-            import com.example.taskmenagmentsystemspringboot1.repositories.TaskRepository;
-            import com.example.taskmenagmentsystemspringboot1.repositories.UserRepository;
-            import com.example.taskmenagmentsystemspringboot1.security.AppUserDetails;
-            import com.example.taskmenagmentsystemspringboot1.service.TaskService;
-            import lombok.RequiredArgsConstructor;
-            import org.springframework.security.access.AccessDeniedException;
-            import org.springframework.stereotype.Service;
+import com.example.taskmenagmentsystemspringboot1.dtos.task.CreateTaskDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.task.TaskStatisticsDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.task.UpdateTaskDto;
+import com.example.taskmenagmentsystemspringboot1.dtos.task.ViewTaskDto;
+import com.example.taskmenagmentsystemspringboot1.entities.task.Task;
+import com.example.taskmenagmentsystemspringboot1.entities.task.TaskPriority;
+import com.example.taskmenagmentsystemspringboot1.entities.task.TaskStatus;
+import com.example.taskmenagmentsystemspringboot1.entities.user.User;
+import com.example.taskmenagmentsystemspringboot1.exceptions.ResourceNotFoundException;
+import com.example.taskmenagmentsystemspringboot1.mappers.TaskMapper;
+import com.example.taskmenagmentsystemspringboot1.repositories.TaskRepository;
+import com.example.taskmenagmentsystemspringboot1.repositories.UserRepository;
+import com.example.taskmenagmentsystemspringboot1.security.AppUserDetails;
+import com.example.taskmenagmentsystemspringboot1.service.TaskService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
 
-            import java.time.LocalDate;
-            import java.util.List;
+import java.time.LocalDate;
+import java.util.List;
 
-            @RequiredArgsConstructor
-            @Service
-            public class TaskServiceImpl implements TaskService {
-                private final TaskRepository taskRepository;
-                private final UserRepository userRepository;
-                private final TaskMapper taskMapper;
+@Slf4j
+@RequiredArgsConstructor
+@Service
+public class TaskServiceImpl implements TaskService {
+    private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
+    private final TaskMapper taskMapper;
 
+    @Override
+    public void deleteTask(Long taskId, Long userId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-                @Override
-                public void deleteTask(Long taskId, Long userId) {
-                    Task task = taskRepository.findById(taskId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
+        boolean isCreator = task.getCreatedBy().getId().equals(userId);
 
-                    User currentUser = userRepository.findById(userId)
-                            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (!isAdmin && !isCreator) {
+            log.warn("Access denied: User {} attempted to delete task {} without permission",
+                    userId, taskId);
+            throw new AccessDeniedException("You are not allowed to delete this task.");
+        }
 
-                    System.out.println("--- DEBUGGING DELETE ACCESS ---");
-                    System.out.println("Logged-in User ID: " + userId);
-                    System.out.println("Logged-in User Role from DB: '" + currentUser.getRole() + "'");
-                    System.out.println("Task Creator ID: " + task.getCreatedBy().getId());
-                    System.out.println("Is logged-in user an ADMIN? " + currentUser.getRole().equals("ADMIN"));
-                    System.out.println("Is logged-in user the task creator? " + task.getCreatedBy().getId().equals(userId));
-                    System.out.println("--- END DEBUG ---");
+        log.info("Task {} deleted by user {}", taskId, userId);
+        taskRepository.delete(task);
+    }
 
+    @Override
+    public ViewTaskDto updateTask(Long taskId, UpdateTaskDto updateTaskDto, Long userId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
 
-                    if (!currentUser.getRole().name().equals("ADMIN") && !task.getCreatedBy().getId().equals(userId)) {
-                        throw new AccessDeniedException("You are not allowed to delete this task.");
-                    }
+        if (!task.getCreatedBy().getId().equals(userId)) {
+            log.warn("Access denied: User {} attempted to update task {} without permission",
+                    userId, taskId);
+            throw new AccessDeniedException("You are not allowed to update this task");
+        }
 
-                    taskRepository.delete(task);
-                }
+        log.info("Updating task {} by user {}", taskId, userId);
 
-                @Override
-                public ViewTaskDto updateTask(Long taskId, UpdateTaskDto updateTaskDto, Long userId) {
-                    Task task = taskRepository.findById(taskId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
-                    if (!task.getCreatedBy().getId().equals(userId)) {
-                        throw new AccessDeniedException("You are not allowed to update this task");
-                    }
+        if (updateTaskDto.getTitle() != null) {
+            task.setTitle(updateTaskDto.getTitle());
+        }
 
+        if (updateTaskDto.getDescription() != null) {
+            task.setDescription(updateTaskDto.getDescription());
+        }
 
-                    if (updateTaskDto.getTitle() != null) {
-                        task.setTitle(updateTaskDto.getTitle());
-                    }
+        if (updateTaskDto.getStatus() != null) {
+            task.setStatus(updateTaskDto.getStatus());
+        }
 
-                    if (updateTaskDto.getDescription() != null) {
-                        task.setDescription(updateTaskDto.getDescription());
-                    }
+        if (updateTaskDto.getPriority() != null) {
+            task.setPriority(updateTaskDto.getPriority());
+        }
 
-                    if (updateTaskDto.getStatus() != null) {
-                        task.setStatus(updateTaskDto.getStatus());
-                    }
+        if (updateTaskDto.getDeadline() != null) {
+            task.setDeadline(updateTaskDto.getDeadline());
+        }
+        Task updatedTask = taskRepository.save(task);
+        return taskMapper.fromEntityToView(updatedTask);
+    }
 
-                    if (updateTaskDto.getPriority() != null) {
-                        task.setPriority(updateTaskDto.getPriority());
-                    }
+    @Override
+    public void updateTaskStatus(Long taskId, Long userId, TaskStatus newStatus) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
-                    if (updateTaskDto.getDeadline() != null) {
-                        task.setDeadline(updateTaskDto.getDeadline());
-                    }
-                    Task updatedTask = taskRepository.save(task);
-                    return taskMapper.fromEntityToView(updatedTask);
-                }
+        if (!task.getAssignedTo().getId().equals(userId)) {
+            log.warn("Access denied: User {} attempted to update status of task {} without permission",
+                    userId, taskId);
+            throw new AccessDeniedException("You are not allowed to update this task.");
+        }
 
+        TaskStatus currentStatus = task.getStatus();
+        boolean valid = switch (currentStatus) {
+            case PENDING -> newStatus == TaskStatus.IN_PROGRESS ||
+                    newStatus == TaskStatus.COMPLETED ||
+                    newStatus == TaskStatus.CANCELED;
 
-                @Override
-                public void updateTaskStatus(Long taskId, Long userId, TaskStatus newStatus) {
-                    Task task = taskRepository.findById(taskId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+            case IN_PROGRESS -> newStatus == TaskStatus.COMPLETED ||
+                    newStatus == TaskStatus.CANCELED;
 
-                    if (!task.getAssignedTo().getId().equals(userId)) {
-                        throw new AccessDeniedException("You are not allowed to update this task.");
-                    }
+            case COMPLETED, CANCELED -> false;
+        };
 
-                    TaskStatus currentStatus = task.getStatus();
-                    boolean valid = switch (currentStatus) {
-                        case PENDING -> newStatus == TaskStatus.IN_PROGRESS ||
-                                newStatus == TaskStatus.COMPLETED ||
-                                newStatus == TaskStatus.CANCELED;
+        if (!valid) {
+            log.warn("Invalid status transition from {} to {} for task {}",
+                    currentStatus, newStatus, taskId);
+            throw new IllegalStateException("Invalid status change from " + currentStatus + " to " + newStatus);
+        }
 
-                        case IN_PROGRESS -> newStatus == TaskStatus.COMPLETED ||
-                                newStatus == TaskStatus.CANCELED;
+        log.info("Task {} status changed from {} to {} by user {}",
+                taskId, currentStatus, newStatus, userId);
+        task.setStatus(newStatus);
+        taskRepository.save(task);
+    }
 
-                        case COMPLETED, CANCELED -> false;
-                    };
+    // Paginated methods
+    @Override
+    public Page<ViewTaskDto> findAll(Pageable pageable) {
+        return taskRepository.findAll(pageable)
+                .map(taskMapper::fromEntityToView);
+    }
 
-                    if (!valid) {
-                        throw new IllegalStateException("Invalid status change from " + currentStatus + " to " + newStatus);
-                    }
+    @Override
+    public Page<ViewTaskDto> getTasksCreatedBy(Long creatorId, Pageable pageable) {
+        return taskRepository.findAllByCreatedBy_Id(creatorId, pageable)
+                .map(taskMapper::fromEntityToView);
+    }
 
-                    task.setStatus(newStatus);
-                    taskRepository.save(task);
-                }
+    @Override
+    public Page<ViewTaskDto> getTasksAssignedTo(Long assigneeId, Pageable pageable) {
+        return taskRepository.findAllByAssignedTo_Id(assigneeId, pageable)
+                .map(taskMapper::fromEntityToView);
+    }
 
-                @Override
-                public List<ViewTaskDto> findAll() {
-                    return taskRepository.findAll().stream()
-                            .map(taskMapper::fromEntityToView)
-                            .toList();
-                }
+    @Override
+    public Page<ViewTaskDto> getUserTasks(Long userId, Pageable pageable) {
+        return taskRepository.findAllByUserIdAsCreatorOrAssignee(userId, pageable)
+                .map(taskMapper::fromEntityToView);
+    }
 
-                @Override
-                public List<ViewTaskDto> getTasksCreatedBy(Long creatorId) {
-                    return taskRepository.findAllByCreatedBy_Id(creatorId).stream()
-                            .map(taskMapper::fromEntityToView)
-                            .toList();
-                }
+    @Override
+    public Page<ViewTaskDto> filterTasks(Long userId, TaskStatus status, TaskPriority priority,
+            LocalDate fromDate, LocalDate toDate, Pageable pageable) {
+        log.info("Filtering tasks for user {}: status={}, priority={}, from={}, to={}",
+                userId, status, priority, fromDate, toDate);
 
-                @Override
-                public List<ViewTaskDto> getTasksAssignedTo(Long id) {
-                    return taskRepository.findAllByAssignedTo_Id(id).stream()
-                            .map(taskMapper::fromEntityToView)
-                            .toList();
-                }
+        return taskRepository.findAllWithFilters(userId, status, priority, fromDate, toDate, pageable)
+                .map(taskMapper::fromEntityToView);
+    }
 
+    @Override
+    public Page<ViewTaskDto> searchTasks(Long userId, String searchTerm, Pageable pageable) {
+        log.info("Searching tasks for user {} with term: {}", userId, searchTerm);
 
-                @Override
-                public ViewTaskDto getTask(Long taskId, Long currentUserId) {
-                    Task task = taskRepository.findById(taskId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
+        return taskRepository.searchTasks(userId, searchTerm, pageable)
+                .map(taskMapper::fromEntityToView);
+    }
 
-                    User currentUser = userRepository.findById(currentUserId)
-                            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId));
+    // Legacy non-paginated methods (kept for backward compatibility)
+    @Override
+    public List<ViewTaskDto> findAll() {
+        return taskRepository.findAll().stream()
+                .map(taskMapper::fromEntityToView)
+                .toList();
+    }
 
-                    boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
-                    boolean isCreator = task.getCreatedBy().getId().equals(currentUserId);
-                    boolean isAssigned = task.getAssignedTo().getId().equals(currentUserId);
+    @Override
+    public List<ViewTaskDto> getTasksCreatedBy(Long creatorId) {
+        return taskRepository.findAllByCreatedBy_Id(creatorId).stream()
+                .map(taskMapper::fromEntityToView)
+                .toList();
+    }
 
-                    if (!(isAdmin || isCreator || isAssigned)) {
-                        throw new AccessDeniedException("You do not have permission to view this task.");
-                    }
+    @Override
+    public List<ViewTaskDto> getTasksAssignedTo(Long id) {
+        return taskRepository.findAllByAssignedTo_Id(id).stream()
+                .map(taskMapper::fromEntityToView)
+                .toList();
+    }
 
-                    return taskMapper.fromEntityToView(task, currentUserId);
-                }
+    @Override
+    public ViewTaskDto getTask(Long taskId, Long currentUserId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + taskId));
 
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentUserId));
 
+        boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
+        boolean isCreator = task.getCreatedBy().getId().equals(currentUserId);
+        boolean isAssigned = task.getAssignedTo().getId().equals(currentUserId);
 
-                public ViewTaskDto createTask(CreateTaskDto dto, Long creatorUserId) {
-                    User creator = userRepository.findById(creatorUserId)
-                            .orElseThrow(() -> new ResourceNotFoundException("Creator user not found"));
+        if (!(isAdmin || isCreator || isAssigned)) {
+            throw new AccessDeniedException("You do not have permission to view this task.");
+        }
 
-                    User assignedTo = userRepository.findById(dto.getAssignedToId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+        return taskMapper.fromEntityToView(task, currentUserId);
+    }
 
-                    Task task = new Task();
-                    task.setTitle(dto.getTitle());
-                    task.setDescription(dto.getDescription());
-                    task.setPriority(dto.getPriority());
-                    task.setStatus(TaskStatus.PENDING);
-                    task.setDeadline(dto.getDeadline());
-                    task.setCreatedAt(LocalDate.now());
-                    task.setCreatedBy(creator);
-                    task.setAssignedTo(assignedTo);
+    public ViewTaskDto createTask(CreateTaskDto dto, Long creatorUserId) {
+        User creator = userRepository.findById(creatorUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Creator user not found"));
 
-                    taskRepository.save(task);
-                    return taskMapper.fromEntityToView(task);
-                }
+        // If assignedToId is not provided, assign task to creator (personal task)
+        User assignedTo;
+        if (dto.getAssignedToId() != null) {
+            assignedTo = userRepository.findById(dto.getAssignedToId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
+        } else {
+            assignedTo = creator; // Personal task
+        }
 
+        Task task = new Task();
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setPriority(dto.getPriority());
+        task.setStatus(TaskStatus.PENDING);
+        task.setDeadline(dto.getDeadline());
+        task.setCreatedAt(LocalDate.now());
+        task.setCreatedBy(creator);
+        task.setAssignedTo(assignedTo);
 
-                @Override
-                public List<ViewTaskDto> getTasksForCurrentUser(Long userId) {
-                    if (!userRepository.existsById(userId)) {
-                        throw new ResourceNotFoundException("User not found with id: " + userId);
-                    }
+        Task savedTask = taskRepository.save(task);
 
-                    return taskRepository.findAllByAssignedToId(userId).stream()
-                            .map(taskMapper::fromEntityToView)
-                            .toList();
-                }
+        if (dto.getAssignedToId() != null && !dto.getAssignedToId().equals(creatorUserId)) {
+            log.info("Task {} created by user {} and assigned to user {}",
+                    savedTask.getId(), creatorUserId, dto.getAssignedToId());
+        } else {
+            log.info("Personal task {} created by user {}",
+                    savedTask.getId(), creatorUserId);
+        }
 
+        return taskMapper.fromEntityToView(savedTask);
+    }
 
+    @Override
+    public List<ViewTaskDto> getTasksForCurrentUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User not found with id: " + userId);
+        }
 
+        return taskRepository.findAllByAssignedToId(userId).stream()
+                .map(taskMapper::fromEntityToView)
+                .toList();
+    }
 
-                @Override
-                public Task assignTaskToUser(User user, Task task) {
-                    Task task1 = taskRepository.findById(task.getId())
-                            .orElseThrow(() -> new RuntimeException("Task not found"));
-                    User user1 = userRepository.findById(user.getId())
-                            .orElseThrow(() -> new RuntimeException("User not found"));
+    @Override
+    public TaskStatisticsDto getStatistics(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("User not found with id: " + userId);
+        }
 
-                    if (task1.getStatus() == TaskStatus.COMPLETED) {
-                        throw new RuntimeException("Cannot assign a completed task");
-                    }
-                    if (task1.getStatus() == TaskStatus.IN_PROGRESS) {
-                        throw new RuntimeException("Cannot assign an in-progress task to another user");
-                    }
+        LocalDate today = LocalDate.now();
 
-                    task1.setAssignedTo(user1);
-                    return taskRepository.save(task1);
-                }
+        // Count by status
+        Long pendingTasks = taskRepository.countByUserIdAndStatus(userId, TaskStatus.PENDING);
+        Long inProgressTasks = taskRepository.countByUserIdAndStatus(userId, TaskStatus.IN_PROGRESS);
+        Long completedTasks = taskRepository.countByUserIdAndStatus(userId, TaskStatus.COMPLETED);
+        Long canceledTasks = taskRepository.countByUserIdAndStatus(userId, TaskStatus.CANCELED);
 
+        // Count by priority
+        Long highPriorityTasks = taskRepository.countByUserIdAndPriority(userId, TaskPriority.HIGH);
+        Long mediumPriorityTasks = taskRepository.countByUserIdAndPriority(userId, TaskPriority.MEDIUM);
+        Long lowPriorityTasks = taskRepository.countByUserIdAndPriority(userId, TaskPriority.LOW);
 
+        // Count created vs assigned
+        Long tasksCreated = taskRepository.countByCreatedBy(userId);
+        Long tasksAssigned = taskRepository.countByAssignedTo(userId);
 
+        // Total tasks (created by OR assigned to user)
+        Long totalTasks = pendingTasks + inProgressTasks + completedTasks + canceledTasks;
 
+        // Completion rate calculation
+        Double completionRate = totalTasks > 0 ? (completedTasks.doubleValue() / totalTasks.doubleValue()) * 100 : 0.0;
 
+        // Additional statistics
+        Long overdueTasks = taskRepository.countOverdueTasks(userId, today);
+        Long todayTasks = taskRepository.countTasksDueToday(userId, today);
 
+        log.info("Generated statistics for user {}: total={}, completed={}, rate={}%",
+                userId, totalTasks, completedTasks, String.format("%.2f", completionRate));
 
+        return TaskStatisticsDto.builder()
+                .totalTasks(totalTasks)
+                .tasksCreated(tasksCreated)
+                .tasksAssigned(tasksAssigned)
+                .pendingTasks(pendingTasks)
+                .inProgressTasks(inProgressTasks)
+                .completedTasks(completedTasks)
+                .canceledTasks(canceledTasks)
+                .highPriorityTasks(highPriorityTasks)
+                .mediumPriorityTasks(mediumPriorityTasks)
+                .lowPriorityTasks(lowPriorityTasks)
+                .completionRate(completionRate)
+                .overdueTasks(overdueTasks)
+                .todayTasks(todayTasks)
+                .build();
+    }
 
-
-
-
-
-            }
+}

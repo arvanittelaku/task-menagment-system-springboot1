@@ -2,7 +2,6 @@ package com.example.taskmenagmentsystemspringboot1.configs;
 
 import com.example.taskmenagmentsystemspringboot1.repositories.UserRepository;
 import com.example.taskmenagmentsystemspringboot1.security.JwtAuthenticationFilter;
-import com.example.taskmenagmentsystemspringboot1.security.PublicEndpointFilter;
 import com.example.taskmenagmentsystemspringboot1.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -48,21 +47,26 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+            JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {})
+                .cors(cors -> {
+                })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated() // Allow authenticated access to /users/me
+                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated() // Allow authenticated
+                                                                                             // access to /users/me
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/register/user").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/register/manager").hasRole(ADMIN.name())
                         .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").hasAnyRole(ADMIN.name(), MANAGER.name())
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasAnyRole(ADMIN.name(), MANAGER.name())
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/by-role").hasAnyRole(ADMIN.name(), MANAGER.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/by-role")
+                        .hasAnyRole(ADMIN.name(), MANAGER.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/managers").hasRole(ADMIN.name())
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**").hasAnyRole(ADMIN.name(), MANAGER.name(), USER.name())
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/**")
+                        .hasAnyRole(ADMIN.name(), MANAGER.name(), USER.name())
                         .requestMatchers(HttpMethod.GET, "/api/v1/tasks").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tasks/{id}").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/tasks").authenticated()
@@ -71,10 +75,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/tasks/{id}").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/tasks/{id}/status").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/tasks/my-tasks").authenticated()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new PublicEndpointFilter(), UsernamePasswordAuthenticationFilter.class);
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

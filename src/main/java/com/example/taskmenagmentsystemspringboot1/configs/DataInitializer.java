@@ -21,7 +21,8 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Create and save test users if they don't exist
-        if (!userRepository.existsByUsername("user")) {
+        if (!userRepository.existsByUsername("user") &&
+                userRepository.findByEmail("user@example.com").isEmpty()) {
             User user = User.builder()
                     .username("user")
                     .password(passwordEncoder.encode("password"))
@@ -31,7 +32,8 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(user);
         }
 
-        if (!userRepository.existsByUsername("manager")) {
+        if (!userRepository.existsByUsername("manager") &&
+                userRepository.findByEmail("manager@example.com").isEmpty()) {
             User manager = User.builder()
                     .username("manager")
                     .password(passwordEncoder.encode("password"))
@@ -42,7 +44,8 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         // Create superadmin if it doesn't exist
-        if (!userRepository.existsByUsername("superadmin")) {
+        if (!userRepository.existsByUsername("superadmin") &&
+                userRepository.findByEmail("superadmin@gmail.com").isEmpty()) {
             User superAdmin = User.builder()
                     .username("superadmin")
                     .password(passwordEncoder.encode("password"))
